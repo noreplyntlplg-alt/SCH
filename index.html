@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการนักเรียนและสื่อสาร (School Line Flex System)</title>
+    
+    <!-- Google Fonts: TH Sarabun PSK -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* CSS Variables - Formal/Government Theme */
+        :root {
+            --primary-color: #003366;
+            --secondary-color: #4a5568;
+            --bg-color: #f4f6f9;
+            --white: #ffffff;
+            --border-color: #e2e8f0;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --info: #17a2b8;
+            --text-main: #1a202c;
+            --text-muted: #718096;
+            --sidebar-width: 250px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-size: 18px; /* TH Sarabun needs slightly larger font */
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-color);
+            color: var(--white);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-header h2 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 10px 0;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: background 0.2s;
+            font-size: 18px;
+        }
+
+        .nav-item i {
+            margin-right: 15px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: rgba(255,255,255,0.15);
+            border-left: 4px solid var(--white);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 30px;
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        .page-header {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        /* Cards */
+        .card {
+            background: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            padding: 20px;
+            border-radius: 8px;
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-left: 5px solid var(--primary-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .stat-title {
+            font-size: 16px;
+            color: var(--text-muted);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-top: 10px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+
+        .btn i { margin-right: 8px; }
+        
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-primary:hover { background-color: #002244; }
+        
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-danger { background-color: var(--danger); color: white; }
+        .btn-outline { background-color: transparent; border: 1px solid var(--primary-color); color: var(--primary-color); }
+        .btn-outline:hover { background-color: var(--primary-color); color: white; }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 16px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        .form-col { flex: 1; }
+
+        /* Tables */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 16px;
+        }
+
+        .table th, .table td {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .table th {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .table tr:hover {
+            background-color: #f8fafc;
+        }
+
+        /* Status Badges */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .badge-danger { background: #f8d7da; color: #721c24; }
+        .badge-secondary { background: #e2e8f0; color: #4a5568; }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        .modal-footer {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+            text-align: right;
+        }
+
+        /* Utilities */
+        .d-none { display: none !important; }
+        .d-flex { display: flex; }
+        .flex-wrap { flex-wrap: wrap; }
+        .gap-10 { gap: 10px; }
+        .mt-20 { margin-top: 20px; }
+        .mb-20 { margin-bottom: 20px; }
+        .text-center { text-align: center; }
+
+        textarea.form-control {
+            min-height: 250px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        /* Mobile */
+        .mobile-toggle {
+            display: none;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 20px;
+            position: fixed;
+            top: 10px; left: 10px;
+            z-index: 1500;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding-top: 60px;
+            }
+            .mobile-toggle {
+                display: block;
+            }
+            .form-row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CONFIGURATION -->
+    <script>
+        const CONFIG = {
+            API_URL: "https://script.google.com/macros/s/AKfycbxaXZ0qTBwGamY0hXcUUvZTyr_CJB3VROrUlYulHVj3DohDdI-uE6eCY_x3rcUe71jq/exec"
+        };
+    </script>
+
+    <!-- Mobile Toggle -->
+    <button class="mobile-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-school"></i> ระบบโรงเรียน</h2>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item active" onclick="navigate('dashboard')">
+                <i class="fas fa-gauge-high"></i> แดชบอร์ด
+            </li>
+            <li class="nav-item" onclick="navigate('students')">
+                <i class="fas fa-user-graduate"></i> จัดการนักเรียน
+            </li>
+            <li class="nav-item" onclick="navigate('usage-keys')">
+                <i class="fas fa-key"></i> รหัสผูกบัญชี (Keys)
+            </li>
+            <li class="nav-item" onclick="navigate('flex-send')">
+                <i class="fas fa-paper-plane"></i> ส่ง Flex Message
+            </li>
+            <li class="nav-item" onclick="navigate('templates')">
+                <i class="fas fa-layer-group"></i> แม่แบบข้อความ
+            </li>
+            <li class="nav-item" onclick="navigate('history')">
+                <i class="fas fa-clock-rotate-left"></i> ประวัติการส่ง
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        
+        <!-- Dashboard View -->
+        <div id="view-dashboard" class="page-view">
+            <div class="page-header">
+                <h1 class="page-title">แดชบอร์ดภาพรวม</h1>
+                <button class="btn btn-outline" onclick="loadDashboard()"><i class="fas fa-sync"></i> รีเฟรช</button>
+            </div>
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <div class="stat-title">นักเรียนทั้งหมด</div>
+                    <div class="stat-value" id="stat-total">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">ผูกบัญชี LINE แล้ว</div>
+                    <div class="stat-value" id="stat-linked" style="color: var(--success)">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">ยังไม่ได้ผูกบัญชี</div>
+                    <div class="stat-value" id="stat-unlinked" style="color: var(--warning)">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">ข้อความที่ส่งวันนี้</div>
+                    <div class="stat-value" id="stat-msgs">0</div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>ยินดีต้อนรับสู่ระบบจัดการนักเรียนและสื่อสารผ่าน LINE</h3>
+                <p style="margin-top: 10px; color: var(--text-muted);">
+                    ระบบนี้ออกแบบมาเพื่อใช้งานในสถานศึกษา เป็นทางการและมีความปลอดภัย 
+                    โปรดเลือกเมนูด้านซ้ายเพื่อเริ่มต้นการใช้งาน
+                </p>
+            </div>
+        </div>
+
+        <!-- Students View -->
+        <div id="view-students" class="page-view d-none">
+            <div class="page-header">
+                <h1 class="page-title">จัดการข้อมูลนักเรียน</h1>
+                <button class="btn btn-primary" onclick="openStudentModal()"><i class="fas fa-plus"></i> เพิ่มนักเรียนใหม่</button>
+            </div>
+            
+            <div class="card mb-20">
+                <div class="form-row">
+                    <div class="form-col">
+                        <label class="form-label">ค้นหา:</label>
+                        <input type="text" id="search-student" class="form-control" placeholder="รหัส, ชื่อ, นามสกุล..." onkeyup="filterStudents()">
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">กรองตามชั้น:</label>
+                        <select id="filter-grade" class="form-control" onchange="filterStudents()">
+                            <option value="">ทั้งหมด</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">กรองตามห้อง:</label>
+                        <select id="filter-room" class="form-control" onchange="filterStudents()">
+                            <option value="">ทั้งหมด</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>รหัสนักเรียน</th>
+                                <th>ชื่อ - สกุล</th>
+                                <th>ชั้น</th>
+                                <th>ห้อง</th>
+                                <th>สถานะ LINE</th>
+                                <th>จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-students">
+                            <tr><td colspan="6" class="text-center">กำลังโหลดข้อมูล...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usage Keys View -->
+        <div id="view-usage-keys" class="page-view d-none">
+            <div class="page-header">
+                <h1 class="page-title">จัดการรหัสผูกบัญชี (Usage Keys)</h1>
+                <div>
+                    <button class="btn btn-outline" onclick="copySelectedKeys()"><i class="fas fa-copy"></i> คัดลอกรหัสที่เลือก</button>
+                    <button class="btn btn-primary" onclick="generateKeysPrompt()"><i class="fas fa-key"></i> สร้างรหัสการใช้งาน</button>
+                </div>
+            </div>
+
+            <div class="card mb-20">
+                <div class="form-row">
+                    <div class="form-col">
+                        <label class="form-label">เลือกชั้นเรียน:</label>
+                        <select id="key-grade" class="form-control" onchange="loadStudentsForKeyGen()">
+                            <option value="">-- เลือกชั้น --</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">เลือกห้อง:</label>
+                        <select id="key-room" class="form-control" onchange="loadStudentsForKeyGen()">
+                            <option value="">-- เลือกห้อง --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="check-all-keys" onchange="toggleAllKeys()"></th>
+                                <th>รหัสนักเรียน</th>
+                                <th>ชื่อ - สกุล</th>
+                                <th>สถานะ LINE</th>
+                                <th>รหัสการใช้งาน (Key)</th>
+                                <th>สถานะ Key</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-keys">
+                            <tr><td colspan="6" class="text-center">กรุณาเลือกชั้นและห้อง</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Send Flex Message View -->
+        <div id="view-flex-send" class="page-view d-none">
+            <div class="page-header">
+                <h1 class="page-title">ส่ง Flex Message</h1>
+            </div>
+
+            <div class="form-row">
+                <div class="form-col" style="flex: 2;">
+                    <div class="card">
+                        <h3>1. ระบุเป้าหมาย (ผู้รับ)</h3>
+                        <p class="mb-20" style="color: var(--text-muted); font-size: 14px;">ระบบจะส่งข้อความเฉพาะผู้ที่ผูกบัญชี LINE แล้วเท่านั้น</p>
+                        
+                        <div class="form-row mb-20">
+                            <div class="form-col">
+                                <label class="form-label">เลือกชั้นเรียน:</label>
+                                <select id="send-grade" class="form-control" onchange="updateSendTargets()">
+                                    <option value="ALL">ส่งทั้งหมดทุกชั้น</option>
+                                </select>
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">เลือกห้อง:</label>
+                                <select id="send-room" class="form-control" onchange="updateSendTargets()">
+                                    <option value="ALL">ทั้งหมด</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="background: #e2e8f0; padding: 15px; border-radius: 4px; text-align: center;">
+                            <h4 style="margin-bottom: 5px;">สรุปผู้รับที่สามารถส่งได้</h4>
+                            <div id="send-summary" style="font-size: 24px; font-weight: bold; color: var(--primary-color);">0 คน</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>2. ข้อความ (JSON Format)</h3>
+                        <div class="d-flex gap-10 mt-20 mb-20">
+                            <select id="select-template" class="form-control" style="flex: 1;" onchange="loadTemplateToEditor()">
+                                <option value="">-- เลือกจากแม่แบบ --</option>
+                            </select>
+                        </div>
+                        <label class="form-label">JSON Data:</label>
+                        <textarea id="flex-json-editor" class="form-control" placeholder='{ "type": "flex", "altText": "แจ้งเตือน", ... }'></textarea>
+                        
+                        <div class="d-flex gap-10 mt-20" style="justify-content: space-between;">
+                            <button class="btn btn-outline" onclick="formatJson()"><i class="fas fa-align-left"></i> จัดรูปแบบ JSON</button>
+                            <button class="btn btn-primary" onclick="confirmSendFlex()"><i class="fas fa-paper-plane"></i> ยืนยันการส่งข้อความ</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Templates View -->
+        <div id="view-templates" class="page-view d-none">
+            <div class="page-header">
+                <h1 class="page-title">จัดการแม่แบบ (Flex Templates)</h1>
+                <button class="btn btn-primary" onclick="openTemplateModal()"><i class="fas fa-plus"></i> เพิ่มแม่แบบใหม่</button>
+            </div>
+            
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ชื่อแม่แบบ</th>
+                                <th>รายละเอียด</th>
+                                <th width="200">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-templates">
+                            <tr><td colspan="3" class="text-center">กำลังโหลด...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- History View -->
+        <div id="view-history" class="page-view d-none">
+            <div class="page-header">
+                <h1 class="page-title">ประวัติการส่งข้อความ</h1>
+                <button class="btn btn-outline" onclick="loadHistory()"><i class="fas fa-sync"></i> รีเฟรช</button>
+            </div>
+            
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>วัน-เวลา</th>
+                                <th>ประเภท</th>
+                                <th>เป้าหมาย</th>
+                                <th>สถานะ</th>
+                                <th>รายละเอียด</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-history">
+                            <tr><td colspan="5" class="text-center">กำลังโหลด...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Student Modal -->
+    <div id="modal-student" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="student-modal-title">เพิ่มนักเรียน</h3>
+                <button class="close-btn" onclick="closeModal('modal-student')">&times;</button>
+            </div>
+            <form id="form-student" onsubmit="submitStudentForm(event)">
+                <input type="hidden" id="stu_rowIndex">
+                <div class="form-group">
+                    <label class="form-label">รหัสประจำตัวนักเรียน *</label>
+                    <input type="text" id="stu_id" class="form-control" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-col" style="flex: 0.5;">
+                        <label class="form-label">คำนำหน้า *</label>
+                        <select id="stu_prefix" class="form-control" required>
+                            <option value="">เลือก</option>
+                            <option value="เด็กชาย">เด็กชาย</option>
+                            <option value="เด็กหญิง">เด็กหญิง</option>
+                            <option value="นาย">นาย</option>
+                            <option value="นางสาว">นางสาว</option>
+                            <option value="นาง">นาง</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">ชื่อ *</label>
+                        <input type="text" id="stu_firstname" class="form-control" required>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">นามสกุล *</label>
+                        <input type="text" id="stu_lastname" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-row mt-20">
+                    <div class="form-col">
+                        <label class="form-label">ระดับชั้น * (เช่น ม.1)</label>
+                        <input type="text" id="stu_grade" class="form-control" required>
+                    </div>
+                    <div class="form-col">
+                        <label class="form-label">ห้อง * (เช่น 1 หรือ 2)</label>
+                        <input type="text" id="stu_room" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modal-student')">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> บันทึกข้อมูล</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Template Modal -->
+    <div id="modal-template" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="template-modal-title">จัดการแม่แบบ</h3>
+                <button class="close-btn" onclick="closeModal('modal-template')">&times;</button>
+            </div>
+            <form id="form-template" onsubmit="submitTemplateForm(event)">
+                <input type="hidden" id="tpl_rowIndex">
+                <div class="form-group">
+                    <label class="form-label">ชื่อแม่แบบ *</label>
+                    <input type="text" id="tpl_name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">รายละเอียด</label>
+                    <input type="text" id="tpl_desc" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">JSON Format *</label>
+                    <textarea id="tpl_json" class="form-control" required></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modal-template')">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> บันทึกแม่แบบ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        // Global State
+        let STATE = {
+            students: [],
+            usageKeys: [],
+            templates: [],
+            grades: [],
+            rooms: []
+        };
+
+        // --- Core Helpers ---
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+        }
+
+        function navigate(viewId) {
+            document.querySelectorAll('.page-view').forEach(el => el.classList.add('d-none'));
+            document.getElementById('view-' + viewId).classList.remove('d-none');
+            
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            if(window.innerWidth <= 768) toggleSidebar();
+
+            // Load data based on view
+            if (viewId === 'dashboard') loadDashboard();
+            if (viewId === 'students') loadStudents();
+            if (viewId === 'usage-keys') { loadStudents(); loadUsageKeys(); }
+            if (viewId === 'flex-send') { loadStudents(); loadTemplates(); }
+            if (viewId === 'templates') loadTemplates();
+            if (viewId === 'history') loadHistory();
+        }
+
+        async function apiPost(action, data = {}) {
+            try {
+                const response = await fetch(CONFIG.API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: action, data: data }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' } // text/plain avoids CORS preflight issues in GAS
+                });
+                const result = await response.json();
+                if (result.status === "error") throw new Error(result.message);
+                return result;
+            } catch (error) {
+                Swal.fire('ข้อผิดพลาด', error.message || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
+                throw error;
+            }
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
+        }
+
+        // --- Loading Utils ---
+        function showLoading(title = 'กำลังประมวลผล...') {
+            Swal.fire({ title: title, allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+        }
+        function hideLoading() { Swal.close(); }
+
+        // --- Modals ---
+        function openStudentModal(student = null) {
+            document.getElementById('form-student').reset();
+            document.getElementById('stu_rowIndex').value = '';
+            document.getElementById('student-modal-title').innerText = 'เพิ่มนักเรียนใหม่';
+            
+            if (student) {
+                document.getElementById('student-modal-title').innerText = 'แก้ไขข้อมูลนักเรียน';
+                document.getElementById('stu_rowIndex').value = student._rowIndex;
+                document.getElementById('stu_id').value = student.student_id;
+                document.getElementById('stu_prefix').value = student.prefix;
+                document.getElementById('stu_firstname').value = student.first_name;
+                document.getElementById('stu_lastname').value = student.last_name;
+                document.getElementById('stu_grade').value = student.grade;
+                document.getElementById('stu_room').value = student.room;
+            }
+            document.getElementById('modal-student').style.display = 'flex';
+        }
+
+        function openTemplateModal(template = null) {
+            document.getElementById('form-template').reset();
+            document.getElementById('tpl_rowIndex').value = '';
+            document.getElementById('template-modal-title').innerText = 'เพิ่มแม่แบบใหม่';
+            
+            if (template) {
+                document.getElementById('template-modal-title').innerText = 'แก้ไขแม่แบบ';
+                document.getElementById('tpl_rowIndex').value = template._rowIndex;
+                document.getElementById('tpl_name').value = template.template_name;
+                document.getElementById('tpl_desc').value = template.description;
+                document.getElementById('tpl_json').value = template.flex_json;
+            }
+            document.getElementById('modal-template').style.display = 'flex';
+        }
+
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        // --- Extract Distinct Grades/Rooms ---
+        function extractGradesAndRooms() {
+            STATE.grades = [...new Set(STATE.students.map(s => s.grade))].filter(Boolean).sort();
+            
+            // Populate Dropdowns
+            const populate = (id, arr, defaultText) => {
+                const el = document.getElementById(id);
+                if(!el) return;
+                const currentVal = el.value;
+                el.innerHTML = `<option value="">${defaultText}</option>` + 
+                               arr.map(x => `<option value="${escapeHTML(x)}">${escapeHTML(x)}</option>`).join('');
+                el.value = currentVal;
+            };
+
+            populate('filter-grade', STATE.grades, 'ทั้งหมด');
+            populate('key-grade', STATE.grades, '-- เลือกชั้น --');
+            populate('send-grade', STATE.grades, 'ส่งทั้งหมดทุกชั้น');
+        }
+
+        function updateRoomDropdowns(grade, targetId, defaultText) {
+            let rooms = STATE.students.filter(s => s.grade === grade).map(s => s.room);
+            rooms = [...new Set(rooms)].filter(Boolean).sort();
+            const el = document.getElementById(targetId);
+            if(!el) return;
+            el.innerHTML = `<option value="">${defaultText}</option>` + 
+                           rooms.map(x => `<option value="${escapeHTML(x)}">${escapeHTML(x)}</option>`).join('');
+        }
+
+        // --- DASHBOARD ---
+        async function loadDashboard() {
+            try {
+                showLoading('กำลังโหลดข้อมูล...');
+                const res = await apiPost('getDashboardStats');
+                document.getElementById('stat-total').innerText = res.data.totalStudents;
+                document.getElementById('stat-linked').innerText = res.data.linkedStudents;
+                document.getElementById('stat-unlinked').innerText = res.data.unlinkedStudents;
+                document.getElementById('stat-msgs').innerText = res.data.messagesToday;
+                hideLoading();
+            } catch(e) {}
+        }
+
+        // --- STUDENTS ---
+        async function loadStudents() {
+            try {
+                const res = await apiPost('getStudents');
+                STATE.students = res.data;
+                extractGradesAndRooms();
+                filterStudents();
+            } catch(e) {}
+        }
+
+        function filterStudents() {
+            const search = document.getElementById('search-student').value.toLowerCase();
+            const grade = document.getElementById('filter-grade').value;
+            const room = document.getElementById('filter-room').value;
+            
+            if(event && event.target.id === 'filter-grade') {
+                updateRoomDropdowns(grade, 'filter-room', 'ทั้งหมด');
+            }
+
+            const filtered = STATE.students.filter(s => {
+                const matchSearch = (s.student_id + s.first_name + s.last_name).toLowerCase().includes(search);
+                const matchGrade = grade ? s.grade === grade : true;
+                const matchRoom = room ? String(s.room) === String(room) : true;
+                return matchSearch && matchGrade && matchRoom;
+            });
+
+            renderStudents(filtered);
+        }
+
+        function renderStudents(data) {
+            const tbody = document.getElementById('table-students');
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">ไม่พบข้อมูล</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(s => `
+                <tr>
+                    <td>${escapeHTML(s.student_id)}</td>
+                    <td>${escapeHTML(s.prefix)}${escapeHTML(s.first_name)} ${escapeHTML(s.last_name)}</td>
+                    <td>${escapeHTML(s.grade)}</td>
+                    <td>${escapeHTML(s.room)}</td>
+                    <td>
+                        <span class="badge ${s.line_status === 'LINKED' ? 'badge-success' : 'badge-secondary'}">
+                            ${s.line_status === 'LINKED' ? '<i class="fas fa-check"></i> ผูกแล้ว' : 'ยังไม่ผูก'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-outline" onclick='openStudentModal(${JSON.stringify(s).replace(/'/g, "&#39;")})'><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-danger" onclick="deleteStudent(${s._rowIndex})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function submitStudentForm(e) {
+            e.preventDefault();
+            const data = {
+                _rowIndex: document.getElementById('stu_rowIndex').value,
+                student_id: document.getElementById('stu_id').value,
+                prefix: document.getElementById('stu_prefix').value,
+                first_name: document.getElementById('stu_firstname').value,
+                last_name: document.getElementById('stu_lastname').value,
+                grade: document.getElementById('stu_grade').value,
+                room: document.getElementById('stu_room').value
+            };
+            
+            showLoading('กำลังบันทึก...');
+            try {
+                const res = await apiPost('saveStudent', data);
+                Swal.fire('สำเร็จ', res.message, 'success');
+                closeModal('modal-student');
+                loadStudents();
+            } catch(err) {}
+        }
+
+        function deleteStudent(rowIndex) {
+            Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: "คุณต้องการลบข้อมูลนักเรียนรายการนี้ใช่หรือไม่?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'ใช่, ลบเลย',
+                cancelButtonText: 'ยกเลิก'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    showLoading('กำลังลบข้อมูล...');
+                    try {
+                        await apiPost('deleteStudent', { rowIndex: rowIndex });
+                        Swal.fire('ลบแล้ว!', 'ลบข้อมูลเรียบร้อยแล้ว', 'success');
+                        loadStudents();
+                    } catch(err) {}
+                }
+            });
+        }
+
+        // --- USAGE KEYS ---
+        async function loadUsageKeys() {
+            try {
+                const res = await apiPost('getUsageKeys');
+                STATE.usageKeys = res.data;
+                loadStudentsForKeyGen(); // re-render table
+            } catch(e) {}
+        }
+
+        function loadStudentsForKeyGen() {
+            const grade = document.getElementById('key-grade').value;
+            const room = document.getElementById('key-room').value;
+            const tbody = document.getElementById('table-keys');
+
+            if(event && event.target.id === 'key-grade') {
+                updateRoomDropdowns(grade, 'key-room', '-- เลือกห้อง --');
+            }
+
+            if (!grade || !room) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">กรุณาเลือกชั้นและห้อง</td></tr>';
+                return;
+            }
+
+            const targetStudents = STATE.students.filter(s => s.grade === grade && String(s.room) === String(room));
+            
+            if (targetStudents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">ไม่พบนักเรียนในชั้น/ห้องที่เลือก</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = targetStudents.map(s => {
+                // Find existing key
+                const keys = STATE.usageKeys.filter(k => String(k.student_id) === String(s.student_id));
+                const activeKey = keys.find(k => k.status === 'ACTIVE');
+                const usedKey = keys.find(k => k.status === 'USED');
+                
+                let keyDisplay = '-';
+                let statusBadge = '-';
+                let canSelect = false;
+
+                if (usedKey) {
+                    keyDisplay = usedKey.usage_key;
+                    statusBadge = '<span class="badge badge-secondary">ถูกใช้งานแล้ว</span>';
+                } else if (activeKey) {
+                    keyDisplay = `<strong>${activeKey.usage_key}</strong>`;
+                    statusBadge = '<span class="badge badge-warning">รอการใช้งาน</span>';
+                    canSelect = true; // Can select to copy
+                } else {
+                    statusBadge = '<span class="badge badge-danger">ยังไม่มีรหัส</span>';
+                    canSelect = true; // Can select to generate
+                }
+
+                return `
+                    <tr>
+                        <td>
+                            ${canSelect && s.line_status !== 'LINKED' ? `<input type="checkbox" class="key-check" value="${s.student_id}" data-key="${activeKey ? activeKey.usage_key : ''}">` : ''}
+                        </td>
+                        <td>${escapeHTML(s.student_id)}</td>
+                        <td>${escapeHTML(s.prefix)}${escapeHTML(s.first_name)} ${escapeHTML(s.last_name)}</td>
+                        <td>
+                            <span class="badge ${s.line_status === 'LINKED' ? 'badge-success' : 'badge-secondary'}">
+                                ${s.line_status === 'LINKED' ? 'ผูกแล้ว' : 'ยังไม่ผูก'}
+                            </span>
+                        </td>
+                        <td>${keyDisplay}</td>
+                        <td>${statusBadge}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function toggleAllKeys() {
+            const isChecked = document.getElementById('check-all-keys').checked;
+            document.querySelectorAll('.key-check').forEach(cb => cb.checked = isChecked);
+        }
+
+        async function generateKeysPrompt() {
+            const selected = Array.from(document.querySelectorAll('.key-check:checked'))
+                                  .filter(cb => !cb.dataset.key) // Only those without keys
+                                  .map(cb => cb.value);
+            
+            if (selected.length === 0) {
+                Swal.fire('คำแนะนำ', 'กรุณาเลือกนักเรียนที่ยังไม่มีรหัสเพื่อทำการสร้าง', 'info');
+                return;
+            }
+
+            Swal.fire({
+                title: 'ยืนยันการสร้างรหัส',
+                text: `คุณกำลังจะสร้างรหัสการใช้งานสำหรับนักเรียน ${selected.length} คน`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'ยืนยันสร้างรหัส'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    showLoading('กำลังสร้างรหัส...');
+                    try {
+                        const res = await apiPost('generateKeys', { studentIds: selected });
+                        Swal.fire('สำเร็จ', res.message, 'success');
+                        loadUsageKeys(); // Refresh
+                    } catch(e) {}
+                }
+            });
+        }
+
+        function copySelectedKeys() {
+            const selected = Array.from(document.querySelectorAll('.key-check:checked'))
+                                  .filter(cb => cb.dataset.key)
+                                  .map(cb => {
+                                      const row = cb.closest('tr');
+                                      const stId = row.cells[1].innerText;
+                                      const name = row.cells[2].innerText;
+                                      return `รหัส: ${stId} | ชื่อ: ${name} | รหัสผูกบัญชี: ${cb.dataset.key}`;
+                                  });
+            
+            if (selected.length === 0) {
+                Swal.fire('คำแนะนำ', 'กรุณาเลือกนักเรียนที่มีรหัสพร้อมใช้งานเพื่อคัดลอก', 'info');
+                return;
+            }
+
+            const textToCopy = selected.join('\n');
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                Swal.fire('คัดลอกสำเร็จ', 'คัดลอกรหัสลงในคลิปบอร์ดแล้ว', 'success');
+            }).catch(err => {
+                Swal.fire('ผิดพลาด', 'ไม่สามารถคัดลอกได้', 'error');
+            });
+        }
+
+        // --- FLEX MESSAGES ---
+        function updateSendTargets() {
+            const grade = document.getElementById('send-grade').value;
+            const room = document.getElementById('send-room').value;
+            
+            if(event && event.target.id === 'send-grade') {
+                updateRoomDropdowns(grade, 'send-room', 'ทั้งหมด');
+            }
+
+            let targets = STATE.students.filter(s => s.line_status === 'LINKED');
+            
+            if (grade !== 'ALL' && grade) {
+                targets = targets.filter(s => s.grade === grade);
+            }
+            if (room !== 'ALL' && room) {
+                targets = targets.filter(s => String(s.room) === String(room));
+            }
+
+            document.getElementById('send-summary').innerText = `${targets.length} คน`;
+            return targets;
+        }
+
+        function formatJson() {
+            const el = document.getElementById('flex-json-editor');
+            try {
+                const obj = JSON.parse(el.value);
+                el.value = JSON.stringify(obj, null, 2);
+            } catch (e) {
+                Swal.fire('รูปแบบผิดพลาด', 'JSON ไม่ถูกต้อง: ' + e.message, 'error');
+            }
+        }
+
+        function confirmSendFlex() {
+            const targets = updateSendTargets();
+            if (targets.length === 0) {
+                Swal.fire('ไม่สามารถส่งได้', 'ไม่มีผู้รับที่ผูกบัญชี LINE ในเงื่อนไขที่เลือก', 'warning');
+                return;
+            }
+
+            const jsonStr = document.getElementById('flex-json-editor').value;
+            if (!jsonStr.trim()) {
+                Swal.fire('ข้อผิดพลาด', 'กรุณาใส่ข้อมูล JSON ของ Flex Message', 'error');
+                return;
+            }
+
+            try {
+                JSON.parse(jsonStr); // Validate JSON
+            } catch (e) {
+                Swal.fire('ข้อผิดพลาด', 'รูปแบบ JSON ไม่ถูกต้อง กรุณาตรวจสอบ', 'error');
+                return;
+            }
+
+            const grade = document.getElementById('send-grade').value;
+            const room = document.getElementById('send-room').value;
+            const templateId = document.getElementById('select-template').value;
+
+            Swal.fire({
+                title: 'ยืนยันการส่ง Flex Message',
+                html: `
+                    <div style="text-align: left; padding: 10px; background: #f8fafc; border-radius: 4px;">
+                        <p><strong>ผู้รับ:</strong> ${targets.length} คน</p>
+                        <p><strong>ชั้น:</strong> ${grade === 'ALL' ? 'ทั้งหมด' : grade}</p>
+                        <p><strong>ห้อง:</strong> ${room === 'ALL' ? 'ทั้งหมด' : room}</p>
+                    </div>
+                    <p style="margin-top: 15px; color: var(--danger); font-size: 14px;">โปรดตรวจสอบข้อมูลให้ถูกต้อง การส่งข้อความไม่สามารถยกเลิกได้</p>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#003366',
+                confirmButtonText: 'ยืนยันการส่ง',
+                cancelButtonText: 'ยกเลิก'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    showLoading('กำลังส่งข้อความผ่าน LINE API...');
+                    try {
+                        const lineUserIds = targets.map(t => t.line_user_id).filter(Boolean);
+                        const studentIds = targets.map(t => t.student_id);
+                        
+                        const res = await apiPost('sendFlexMessage', {
+                            lineUserIds,
+                            studentIds,
+                            flexJson: jsonStr,
+                            templateId
+                        });
+                        
+                        Swal.fire('การส่งสำเร็จ', res.message, 'success');
+                        document.getElementById('flex-json-editor').value = '';
+                    } catch(e) {}
+                }
+            });
+        }
+
+        // --- TEMPLATES ---
+        async function loadTemplates() {
+            try {
+                const res = await apiPost('getFlexTemplates');
+                STATE.templates = res.data;
+                renderTemplates();
+                populateTemplateDropdown();
+            } catch(e) {}
+        }
+
+        function renderTemplates() {
+            const tbody = document.getElementById('table-templates');
+            if (STATE.templates.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center">ไม่มีข้อมูลแม่แบบ</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = STATE.templates.map(t => `
+                <tr>
+                    <td><strong>${escapeHTML(t.template_name)}</strong></td>
+                    <td>${escapeHTML(t.description)}</td>
+                    <td>
+                        <button class="btn btn-outline" onclick='openTemplateModal(${JSON.stringify(t).replace(/'/g, "&#39;")})'><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-danger" onclick="deleteTemplate(${t._rowIndex})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function populateTemplateDropdown() {
+            const select = document.getElementById('select-template');
+            if(!select) return;
+            select.innerHTML = '<option value="">-- เลือกจากแม่แบบ --</option>' + 
+                STATE.templates.map(t => `<option value="${t.template_id}">${escapeHTML(t.template_name)}</option>`).join('');
+        }
+
+        function loadTemplateToEditor() {
+            const tId = document.getElementById('select-template').value;
+            if(!tId) {
+                document.getElementById('flex-json-editor').value = '';
+                return;
+            }
+            const t = STATE.templates.find(x => x.template_id === tId);
+            if(t) {
+                document.getElementById('flex-json-editor').value = t.flex_json;
+                formatJson();
+            }
+        }
+
+        async function submitTemplateForm(e) {
+            e.preventDefault();
+            
+            const jsonStr = document.getElementById('tpl_json').value;
+            try { JSON.parse(jsonStr); } catch (err) {
+                Swal.fire('ข้อผิดพลาด', 'รูปแบบ JSON ไม่ถูกต้อง', 'error');
+                return;
+            }
+
+            const data = {
+                _rowIndex: document.getElementById('tpl_rowIndex').value,
+                template_name: document.getElementById('tpl_name').value,
+                description: document.getElementById('tpl_desc').value,
+                flex_json: jsonStr
+            };
+            
+            showLoading('กำลังบันทึก...');
+            try {
+                const res = await apiPost('saveFlexTemplate', data);
+                Swal.fire('สำเร็จ', res.message, 'success');
+                closeModal('modal-template');
+                loadTemplates();
+            } catch(err) {}
+        }
+
+        function deleteTemplate(rowIndex) {
+            Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: "ลบแม่แบบนี้ใช่หรือไม่?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'ลบ',
+                cancelButtonText: 'ยกเลิก'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    showLoading('กำลังลบ...');
+                    try {
+                        await apiPost('deleteFlexTemplate', { rowIndex: rowIndex });
+                        Swal.fire('สำเร็จ', 'ลบแม่แบบแล้ว', 'success');
+                        loadTemplates();
+                    } catch(err) {}
+                }
+            });
+        }
+
+        // --- HISTORY ---
+        async function loadHistory() {
+            try {
+                showLoading('กำลังโหลดประวัติ...');
+                const res = await apiPost('getNotificationLogs');
+                const tbody = document.getElementById('table-history');
+                
+                if (res.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center">ไม่มีประวัติการส่ง</td></tr>';
+                } else {
+                    tbody.innerHTML = res.data.map(log => `
+                        <tr>
+                            <td>${escapeHTML(log.sent_at)}</td>
+                            <td><span class="badge badge-secondary">${escapeHTML(log.message_type)}</span></td>
+                            <td>เป้าหมาย: ${log.student_id === 'MULTIPLE' ? 'ส่งแบบกลุ่ม' : escapeHTML(log.student_id)}</td>
+                            <td>
+                                <span class="badge ${log.status === 'SUCCESS' ? 'badge-success' : 'badge-danger'}">
+                                    ${escapeHTML(log.status)}
+                                </span>
+                            </td>
+                            <td style="font-size: 14px; color: var(--danger);">${escapeHTML(log.error_message)}</td>
+                        </tr>
+                    `).join('');
+                }
+                hideLoading();
+            } catch(e) {}
+        }
+
+        // Init App
+        window.onload = () => {
+            if(CONFIG.API_URL.includes("ใส่_URL")) {
+                Swal.fire('แจ้งเตือน', 'กรุณาใส่ API_URL ของ Google Apps Script ในไฟล์ index.html ก่อนใช้งาน', 'warning');
+            } else {
+                loadDashboard();
+            }
+        };
+    </script>
+</body>
+</html>
